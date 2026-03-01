@@ -8,114 +8,180 @@
 </head>
 <body>
   <div class="container">
+
     <header>
       <h1>Mortgage Affordability Calculator</h1>
-      <p class="subtitle">Find out how much home you can afford</p>
+      <p class="subtitle">Discover what you can afford and plan your loan</p>
     </header>
 
-    <main>
-      <section class="inputs-section">
-        <h2>Your Financial Details</h2>
+    <div class="top-grid">
+
+      <!-- ── Inputs ── -->
+      <section class="card inputs-section">
+        <h2>Your Details</h2>
 
         <div class="form-group">
-          <label for="annual-income">Annual Gross Income ($)</label>
-          <input type="number" id="annual-income" placeholder="e.g. 80000" min="0" />
+          <label for="annual-income">Annual Gross Income</label>
+          <div class="input-wrap prefix">
+            <span class="affix">$</span>
+            <input type="number" id="annual-income" placeholder="80,000" min="0" />
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="monthly-debts">Monthly Debt Payments ($)</label>
-          <input type="number" id="monthly-debts" placeholder="e.g. 500" min="0" />
-          <small>Car loans, student loans, credit cards, etc.</small>
+          <label for="monthly-debts">Monthly Debt Payments <span class="hint">car, student, credit card</span></label>
+          <div class="input-wrap prefix">
+            <span class="affix">$</span>
+            <input type="number" id="monthly-debts" placeholder="500" min="0" />
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="down-payment">Down Payment ($)</label>
-          <input type="number" id="down-payment" placeholder="e.g. 40000" min="0" />
+          <label for="down-payment">Down Payment</label>
+          <div class="input-wrap prefix">
+            <span class="affix">$</span>
+            <input type="number" id="down-payment" placeholder="40,000" min="0" />
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="interest-rate">Annual Interest Rate (%)</label>
-          <input type="number" id="interest-rate" placeholder="e.g. 6.5" min="0" step="0.01" />
+        <div class="form-row">
+          <div class="form-group">
+            <label for="interest-rate">Interest Rate</label>
+            <div class="input-wrap suffix">
+              <input type="number" id="interest-rate" placeholder="6.5" min="0" step="0.01" />
+              <span class="affix">%</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="loan-term">Loan Term</label>
+            <select id="loan-term">
+              <option value="30">30 years</option>
+              <option value="15">15 years</option>
+            </select>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="loan-term">Loan Term (years)</label>
-          <select id="loan-term">
-            <option value="30">30 years</option>
-            <option value="20">20 years</option>
-            <option value="15">15 years</option>
-            <option value="10">10 years</option>
-          </select>
-        </div>
+        <details class="advanced-details">
+          <summary>Optional Details</summary>
+          <div class="advanced-body">
+            <div class="form-group">
+              <label for="property-tax">Property Tax Rate</label>
+              <div class="input-wrap suffix">
+                <input type="number" id="property-tax" placeholder="1.2" min="0" step="0.01" value="1.2" />
+                <span class="affix">%/yr</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="home-insurance">Annual Home Insurance</label>
+              <div class="input-wrap prefix">
+                <span class="affix">$</span>
+                <input type="number" id="home-insurance" placeholder="1,200" min="0" value="1200" />
+              </div>
+            </div>
+          </div>
+        </details>
 
-        <div class="form-group">
-          <label for="property-tax">Annual Property Tax Rate (%)</label>
-          <input type="number" id="property-tax" placeholder="e.g. 1.2" min="0" step="0.01" value="1.2" />
-        </div>
-
-        <div class="form-group">
-          <label for="home-insurance">Annual Home Insurance ($)</label>
-          <input type="number" id="home-insurance" placeholder="e.g. 1200" min="0" value="1200" />
-        </div>
-
-        <button id="calculate-btn" class="btn-primary">Calculate Affordability</button>
+        <button id="calculate-btn" class="btn-primary">Calculate Affordability →</button>
       </section>
 
-      <section class="results-section" id="results" hidden>
-        <h2>Your Results</h2>
+      <!-- ── Results ── -->
+      <section class="card results-section" id="results" hidden>
+        <h2>Results</h2>
 
-        <div class="result-card highlight">
-          <span class="result-label">Maximum Home Price</span>
-          <span class="result-value" id="max-home-price">—</span>
+        <div class="hero-card">
+          <span class="hero-label">Maximum Home Price</span>
+          <span class="hero-value" id="max-home-price">—</span>
         </div>
 
-        <div class="result-grid">
-          <div class="result-card">
-            <span class="result-label">Max Loan Amount</span>
-            <span class="result-value" id="max-loan">—</span>
+        <div class="stats-grid">
+          <div class="stat">
+            <span class="stat-label">Loan Amount</span>
+            <span class="stat-value" id="max-loan">—</span>
           </div>
-          <div class="result-card">
-            <span class="result-label">Monthly Payment</span>
-            <span class="result-value" id="monthly-payment">—</span>
+          <div class="stat">
+            <span class="stat-label">Monthly Payment</span>
+            <span class="stat-value" id="monthly-payment">—</span>
           </div>
-          <div class="result-card">
-            <span class="result-label">Principal &amp; Interest</span>
-            <span class="result-value" id="pi-payment">—</span>
+          <div class="stat stat-orange">
+            <span class="stat-label">Total Interest Paid</span>
+            <span class="stat-value" id="total-interest">—</span>
           </div>
-          <div class="result-card">
-            <span class="result-label">Property Tax</span>
-            <span class="result-value" id="tax-payment">—</span>
+          <div class="stat">
+            <span class="stat-label">Total Cost</span>
+            <span class="stat-value" id="total-cost">—</span>
           </div>
-          <div class="result-card">
-            <span class="result-label">Home Insurance</span>
-            <span class="result-value" id="insurance-payment">—</span>
+          <div class="stat">
+            <span class="stat-label">Principal &amp; Interest</span>
+            <span class="stat-value" id="pi-payment">—</span>
           </div>
-          <div class="result-card">
-            <span class="result-label">Debt-to-Income Ratio</span>
-            <span class="result-value" id="dti-ratio">—</span>
+          <div class="stat">
+            <span class="stat-label">Total DTI</span>
+            <span class="stat-value" id="dti-ratio">—</span>
           </div>
         </div>
 
-        <div class="dti-bar-wrapper">
-          <label>DTI Breakdown</label>
-          <div class="dti-bar" id="dti-bar">
-            <div class="dti-segment dti-debts" id="dti-debts-segment"></div>
-            <div class="dti-segment dti-housing" id="dti-housing-segment"></div>
+        <div class="dti-block">
+          <div class="dti-labels">
+            <span class="dti-title">Monthly Income Allocation</span>
+            <span class="dti-pct" id="dti-pct-label"></span>
+          </div>
+          <div class="dti-track">
+            <div class="dti-seg seg-debts"   id="dti-debts-segment"></div>
+            <div class="dti-seg seg-housing" id="dti-housing-segment"></div>
           </div>
           <div class="dti-legend">
-            <span class="legend-dot dti-debts"></span> Existing Debts
-            <span class="legend-dot dti-housing"></span> Housing
+            <span><span class="dot dot-orange"></span>Debts</span>
+            <span><span class="dot dot-blue"></span>Housing</span>
+            <span><span class="dot dot-gray"></span>Other</span>
           </div>
         </div>
 
-        <div class="affordability-note" id="affordability-note"></div>
+        <div class="afford-note" id="affordability-note"></div>
       </section>
-    </main>
+
+    </div><!-- /.top-grid -->
+
+    <!-- ── Chart ── -->
+    <section class="card chart-section" id="chart-section" hidden>
+      <div class="chart-header">
+        <h2>Principal vs. Interest Over Time</h2>
+        <p class="chart-sub">Annual payment breakdown — note how the principal share grows each year</p>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="amort-chart"></canvas>
+        <div class="chart-tooltip" id="chart-tooltip"></div>
+      </div>
+      <div class="chart-legend">
+        <span><span class="dot dot-blue"></span>Principal</span>
+        <span><span class="dot dot-orange"></span>Interest</span>
+      </div>
+    </section>
+
+    <!-- ── Amortization Table ── -->
+    <section class="card table-section" id="table-section" hidden>
+      <h2>Amortization Schedule</h2>
+      <p class="chart-sub">Yearly summary of principal, interest, and remaining balance</p>
+      <div class="table-scroll">
+        <table class="amort-table">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Principal Paid</th>
+              <th>Interest Paid</th>
+              <th>Total Paid</th>
+              <th>Remaining Balance</th>
+            </tr>
+          </thead>
+          <tbody id="amort-tbody"></tbody>
+        </table>
+      </div>
+    </section>
 
     <footer>
-      <p>This calculator provides estimates only and does not constitute financial advice.</p>
+      <p>Estimates only — not financial advice. Consult a licensed mortgage professional.</p>
     </footer>
-  </div>
+
+  </div><!-- /.container -->
 
   <script src="js/calculator.js"></script>
 </body>

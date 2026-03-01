@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mortgage Affordability Calculator</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Mortgage Affordability Calculator</h1>
+      <p class="subtitle">Find out how much home you can afford</p>
+    </header>
+
+    <main>
+      <section class="inputs-section">
+        <h2>Your Financial Details</h2>
+
+        <div class="form-group">
+          <label for="annual-income">Annual Gross Income ($)</label>
+          <input type="number" id="annual-income" placeholder="e.g. 80000" min="0" />
+        </div>
+
+        <div class="form-group">
+          <label for="monthly-debts">Monthly Debt Payments ($)</label>
+          <input type="number" id="monthly-debts" placeholder="e.g. 500" min="0" />
+          <small>Car loans, student loans, credit cards, etc.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="down-payment">Down Payment ($)</label>
+          <input type="number" id="down-payment" placeholder="e.g. 40000" min="0" />
+        </div>
+
+        <div class="form-group">
+          <label for="interest-rate">Annual Interest Rate (%)</label>
+          <input type="number" id="interest-rate" placeholder="e.g. 6.5" min="0" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label for="loan-term">Loan Term (years)</label>
+          <select id="loan-term">
+            <option value="30">30 years</option>
+            <option value="20">20 years</option>
+            <option value="15">15 years</option>
+            <option value="10">10 years</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="property-tax">Annual Property Tax Rate (%)</label>
+          <input type="number" id="property-tax" placeholder="e.g. 1.2" min="0" step="0.01" value="1.2" />
+        </div>
+
+        <div class="form-group">
+          <label for="home-insurance">Annual Home Insurance ($)</label>
+          <input type="number" id="home-insurance" placeholder="e.g. 1200" min="0" value="1200" />
+        </div>
+
+        <button id="calculate-btn" class="btn-primary">Calculate Affordability</button>
+      </section>
+
+      <section class="results-section" id="results" hidden>
+        <h2>Your Results</h2>
+
+        <div class="result-card highlight">
+          <span class="result-label">Maximum Home Price</span>
+          <span class="result-value" id="max-home-price">—</span>
+        </div>
+
+        <div class="result-grid">
+          <div class="result-card">
+            <span class="result-label">Max Loan Amount</span>
+            <span class="result-value" id="max-loan">—</span>
+          </div>
+          <div class="result-card">
+            <span class="result-label">Monthly Payment</span>
+            <span class="result-value" id="monthly-payment">—</span>
+          </div>
+          <div class="result-card">
+            <span class="result-label">Principal &amp; Interest</span>
+            <span class="result-value" id="pi-payment">—</span>
+          </div>
+          <div class="result-card">
+            <span class="result-label">Property Tax</span>
+            <span class="result-value" id="tax-payment">—</span>
+          </div>
+          <div class="result-card">
+            <span class="result-label">Home Insurance</span>
+            <span class="result-value" id="insurance-payment">—</span>
+          </div>
+          <div class="result-card">
+            <span class="result-label">Debt-to-Income Ratio</span>
+            <span class="result-value" id="dti-ratio">—</span>
+          </div>
+        </div>
+
+        <div class="dti-bar-wrapper">
+          <label>DTI Breakdown</label>
+          <div class="dti-bar" id="dti-bar">
+            <div class="dti-segment dti-debts" id="dti-debts-segment"></div>
+            <div class="dti-segment dti-housing" id="dti-housing-segment"></div>
+          </div>
+          <div class="dti-legend">
+            <span class="legend-dot dti-debts"></span> Existing Debts
+            <span class="legend-dot dti-housing"></span> Housing
+          </div>
+        </div>
+
+        <div class="affordability-note" id="affordability-note"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>This calculator provides estimates only and does not constitute financial advice.</p>
+    </footer>
+  </div>
+
+  <script src="js/calculator.js"></script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+/* ── Reset & base ─────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f0f4f8;
+  color: #1a202c;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+/* ── Layout ───────────────────────────────────────────── */
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2b4c7e;
+}
+
+header .subtitle {
+  color: #718096;
+  margin-top: 0.4rem;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  main { grid-template-columns: 1fr; }
+  header h1 { font-size: 1.5rem; }
+}
+
+footer {
+  text-align: center;
+  margin-top: 2rem;
+  color: #a0aec0;
+  font-size: 0.8rem;
+}
+
+/* ── Sections ─────────────────────────────────────────── */
+.inputs-section,
+.results-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+}
+
+.inputs-section h2,
+.results-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2b4c7e;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid #ebf4ff;
+  padding-bottom: 0.5rem;
+}
+
+/* ── Form elements ────────────────────────────────────── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+input[type="number"],
+select {
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+  background: #fafafa;
+  width: 100%;
+}
+
+input[type="number"]:focus,
+select:focus {
+  outline: none;
+  border-color: #4a90d9;
+  background: #fff;
+}
+
+small {
+  color: #a0aec0;
+  font-size: 0.78rem;
+}
+
+.btn-primary {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #2b4c7e;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-primary:hover { background: #1e3a63; }
+.btn-primary:active { transform: scale(0.98); }
+
+/* ── Result cards ─────────────────────────────────────── */
+.result-card {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.result-card.highlight {
+  background: #ebf4ff;
+  border-color: #4a90d9;
+  margin-bottom: 1rem;
+}
+
+.result-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.result-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2b4c7e;
+}
+
+.result-card.highlight .result-value {
+  font-size: 1.6rem;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+/* ── DTI bar ──────────────────────────────────────────── */
+.dti-bar-wrapper {
+  margin-top: 1.25rem;
+}
+
+.dti-bar-wrapper label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #718096;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.dti-bar {
+  height: 16px;
+  border-radius: 8px;
+  background: #e2e8f0;
+  overflow: hidden;
+  display: flex;
+}
+
+.dti-segment {
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.dti-segment.dti-debts  { background: #f6ad55; }
+.dti-segment.dti-housing { background: #4a90d9; }
+
+.dti-legend {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: #718096;
+  align-items: center;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.legend-dot.dti-debts   { background: #f6ad55; }
+.legend-dot.dti-housing { background: #4a90d9; }
+
+/* ── Affordability note ───────────────────────────────── */
+.affordability-note {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  display: none;
+}
+
+.affordability-note.good {
+  background: #f0fff4;
+  border: 1px solid #68d391;
+  color: #276749;
+  display: block;
+}
+
+.affordability-note.warning {
+  background: #fffaf0;
+  border: 1px solid #f6ad55;
+  color: #7b341e;
+  display: block;
+}
+
+.affordability-note.bad {
+  background: #fff5f5;
+  border: 1px solid #fc8181;
+  color: #742a2a;
+  display: block;
+}

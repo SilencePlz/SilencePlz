@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mortgage Affordability Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -11,176 +14,233 @@
 
     <header>
       <h1>Mortgage Affordability Calculator</h1>
-      <p class="subtitle">Discover what you can afford and plan your loan</p>
+      <p class="subtitle">Real numbers. No surprises.</p>
     </header>
 
-    <div class="top-grid">
+    <!-- KPI Bar -->
+    <div class="kpi-bar">
+      <div class="kpi">
+        <span class="kpi-label">Gross Monthly</span>
+        <span class="kpi-value mono" id="kpi-gross">—</span>
+      </div>
+      <div class="kpi kpi-violet">
+        <span class="kpi-label">Monthly Retirement</span>
+        <span class="kpi-value mono" id="kpi-retirement">—</span>
+      </div>
+      <div class="kpi kpi-green">
+        <span class="kpi-label">Available for Housing</span>
+        <span class="kpi-value mono" id="kpi-available">—</span>
+      </div>
+      <div class="kpi kpi-amber">
+        <span class="kpi-label">28% DTI Ceiling</span>
+        <span class="kpi-value mono" id="kpi-dti-ceiling">—</span>
+      </div>
+    </div>
 
-      <!-- ── Inputs ── -->
-      <section class="card inputs-section">
-        <h2>Your Details</h2>
+    <!-- Dashboard -->
+    <div class="dashboard">
 
-        <div class="form-group">
-          <label for="annual-income">Annual Gross Income</label>
-          <div class="input-wrap prefix">
-            <span class="affix">$</span>
-            <input type="number" id="annual-income" placeholder="80,000" min="0" />
+      <!-- Left Panel -->
+      <aside class="card left-panel">
+
+        <section class="input-section">
+          <h2 class="section-divider">Income &amp; Savings</h2>
+          <div class="field">
+            <label>Annual Gross Income</label>
+            <div class="input-wrap prefix">
+              <span class="affix">$</span>
+              <input type="number" id="annual-income" value="310000" min="0" step="1000" />
+            </div>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label for="monthly-debts">Monthly Debt Payments <span class="hint">car, student, credit card</span></label>
-          <div class="input-wrap prefix">
-            <span class="affix">$</span>
-            <input type="number" id="monthly-debts" placeholder="500" min="0" />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="down-payment">Down Payment</label>
-          <div class="input-wrap prefix">
-            <span class="affix">$</span>
-            <input type="number" id="down-payment" placeholder="40,000" min="0" />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="interest-rate">Interest Rate</label>
+          <div class="field">
+            <label>Effective Tax Rate</label>
             <div class="input-wrap suffix">
-              <input type="number" id="interest-rate" placeholder="6.5" min="0" step="0.01" />
+              <input type="number" id="tax-rate" value="28" min="0" max="60" step="0.5" />
               <span class="affix">%</span>
             </div>
           </div>
-          <div class="form-group">
-            <label for="loan-term">Loan Term</label>
-            <select id="loan-term">
-              <option value="30">30 years</option>
-              <option value="15">15 years</option>
-            </select>
-          </div>
-        </div>
-
-        <details class="advanced-details">
-          <summary>Optional Details</summary>
-          <div class="advanced-body">
-            <div class="form-group">
-              <label for="property-tax">Property Tax Rate</label>
-              <div class="input-wrap suffix">
-                <input type="number" id="property-tax" placeholder="1.2" min="0" step="0.01" value="1.2" />
-                <span class="affix">%/yr</span>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="home-insurance">Annual Home Insurance</label>
-              <div class="input-wrap prefix">
-                <span class="affix">$</span>
-                <input type="number" id="home-insurance" placeholder="1,200" min="0" value="1200" />
-              </div>
+          <div class="field">
+            <label>
+              Annual Retirement Savings
+              <span class="hint">401k + Match + IRA + Mega Backdoor</span>
+            </label>
+            <div class="input-wrap prefix">
+              <span class="affix">$</span>
+              <input type="number" id="retirement-savings" value="115000" min="0" step="1000" />
             </div>
           </div>
-        </details>
+        </section>
 
-        <button id="calculate-btn" class="btn-primary">Calculate Affordability →</button>
-      </section>
+        <section class="input-section">
+          <h2 class="section-divider">Lifestyle</h2>
+          <div class="field">
+            <label>
+              Monthly Living Expenses
+              <span class="hint">Food, fun, utilities, cars</span>
+            </label>
+            <div class="input-wrap prefix">
+              <span class="affix">$</span>
+              <input type="number" id="living-expenses" value="6000" min="0" step="100" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Monthly Non-Mortgage Debts</label>
+            <div class="input-wrap prefix">
+              <span class="affix">$</span>
+              <input type="number" id="monthly-debts" value="0" min="0" step="100" />
+            </div>
+          </div>
+        </section>
 
-      <!-- ── Results ── -->
-      <section class="card results-section" id="results" hidden>
-        <h2>Results</h2>
+        <section class="input-section">
+          <h2 class="section-divider">Assets &amp; Loan</h2>
+          <div class="field">
+            <label>Cash to Close</label>
+            <div class="input-wrap prefix">
+              <span class="affix">$</span>
+              <input type="number" id="cash-to-close" value="100000" min="0" step="5000" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Interest Rate</label>
+            <div class="input-wrap suffix">
+              <input type="number" id="interest-rate" value="6.5" min="0" max="20" step="0.125" />
+              <span class="affix">%</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Property Tax Rate</label>
+            <div class="input-wrap suffix">
+              <input type="number" id="property-tax" value="0.87" min="0" max="5" step="0.01" />
+              <span class="affix">%</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Home Insurance Rate</label>
+            <div class="input-wrap suffix">
+              <input type="number" id="insurance-rate" value="0.4" min="0" max="3" step="0.01" />
+              <span class="affix">%</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>HOA Monthly Fee <span class="hint">optional</span></label>
+            <div class="input-wrap prefix">
+              <span class="affix">$</span>
+              <input type="number" id="hoa-fee" value="0" min="0" step="25" />
+            </div>
+          </div>
+        </section>
 
-        <div class="hero-card">
-          <span class="hero-label">Maximum Home Price</span>
-          <span class="hero-value" id="max-home-price">—</span>
+        <section class="input-section">
+          <h2 class="section-divider">Loan Term</h2>
+          <div class="term-toggle">
+            <button class="term-btn active" data-term="30" id="btn-30">30yr</button>
+            <button class="term-btn" data-term="15" id="btn-15">15yr</button>
+          </div>
+        </section>
+
+      </aside>
+
+      <!-- Right Panel -->
+      <main class="right-panel">
+
+        <!-- Card 1: Cash Flow Waterfall -->
+        <div class="card">
+          <h3 class="card-title">Cash Flow Waterfall</h3>
+          <div class="waterfall">
+            <div class="wf-row">
+              <span class="wf-label">Gross Monthly Income</span>
+              <span class="wf-value mono" id="wf-gross">—</span>
+            </div>
+            <div class="wf-row wf-red">
+              <span class="wf-label">− Taxes</span>
+              <span class="wf-value mono" id="wf-taxes">—</span>
+            </div>
+            <div class="wf-row wf-violet">
+              <span class="wf-label">− Retirement Savings</span>
+              <span class="wf-value mono" id="wf-retirement">—</span>
+            </div>
+            <div class="wf-row wf-amber">
+              <span class="wf-label">− Living Expenses</span>
+              <span class="wf-value mono" id="wf-living">—</span>
+            </div>
+            <div class="wf-row wf-red">
+              <span class="wf-label">− Monthly Debts</span>
+              <span class="wf-value mono" id="wf-debts">—</span>
+            </div>
+            <div class="wf-row wf-result">
+              <span class="wf-label">Available for Housing</span>
+              <span class="wf-value mono" id="wf-available">—</span>
+            </div>
+          </div>
         </div>
 
-        <div class="stats-grid">
-          <div class="stat">
-            <span class="stat-label">Loan Amount</span>
-            <span class="stat-value" id="max-loan">—</span>
+        <!-- Card 2: 15yr vs 30yr Comparison -->
+        <div class="card">
+          <div class="comparison-header">
+            <h3 class="card-title">15yr vs 30yr at</h3>
+            <div class="price-input-wrap">
+              <span class="affix mono violet">$</span>
+              <input type="number" id="comparison-price" value="550000" min="0" step="10000" class="price-input mono violet" />
+            </div>
           </div>
-          <div class="stat">
-            <span class="stat-label">Monthly Payment</span>
-            <span class="stat-value" id="monthly-payment">—</span>
-          </div>
-          <div class="stat stat-orange">
-            <span class="stat-label">Total Interest Paid</span>
-            <span class="stat-value" id="total-interest">—</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Total Cost</span>
-            <span class="stat-value" id="total-cost">—</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Principal &amp; Interest</span>
-            <span class="stat-value" id="pi-payment">—</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Total DTI</span>
-            <span class="stat-value" id="dti-ratio">—</span>
-          </div>
-        </div>
-
-        <div class="dti-block">
-          <div class="dti-labels">
-            <span class="dti-title">Monthly Income Allocation</span>
-            <span class="dti-pct" id="dti-pct-label"></span>
-          </div>
-          <div class="dti-track">
-            <div class="dti-seg seg-debts"   id="dti-debts-segment"></div>
-            <div class="dti-seg seg-housing" id="dti-housing-segment"></div>
-          </div>
-          <div class="dti-legend">
-            <span><span class="dot dot-orange"></span>Debts</span>
-            <span><span class="dot dot-blue"></span>Housing</span>
-            <span><span class="dot dot-gray"></span>Other</span>
+          <p class="comp-note">10% down · PMI where applicable</p>
+          <div class="comparison-grid">
+            <div class="comp-card comp-violet">
+              <div class="comp-term violet">30 Year</div>
+              <div class="comp-row"><span class="comp-label">Monthly PITI</span><span class="comp-value mono" id="c30-piti">—</span></div>
+              <div class="comp-row"><span class="comp-label">P&amp;I Only</span><span class="comp-value mono" id="c30-pi">—</span></div>
+              <div class="comp-row"><span class="comp-label">Total P&amp;I Paid</span><span class="comp-value mono" id="c30-total">—</span></div>
+              <div class="comp-row"><span class="comp-label">Total Interest</span><span class="comp-value mono red" id="c30-interest">—</span></div>
+              <div class="comp-surplus badge" id="c30-surplus">—</div>
+            </div>
+            <div class="comp-card comp-green">
+              <div class="comp-term green">15 Year</div>
+              <div class="comp-row"><span class="comp-label">Monthly PITI</span><span class="comp-value mono" id="c15-piti">—</span></div>
+              <div class="comp-row"><span class="comp-label">P&amp;I Only</span><span class="comp-value mono" id="c15-pi">—</span></div>
+              <div class="comp-row"><span class="comp-label">Total P&amp;I Paid</span><span class="comp-value mono" id="c15-total">—</span></div>
+              <div class="comp-row"><span class="comp-label">Total Interest</span><span class="comp-value mono red" id="c15-interest">—</span></div>
+              <div class="comp-surplus badge" id="c15-surplus">—</div>
+            </div>
           </div>
         </div>
 
-        <div class="afford-note" id="affordability-note"></div>
-      </section>
+        <!-- Card 3: Affordability Matrix -->
+        <div class="card">
+          <div class="matrix-header">
+            <h3 class="card-title">Affordability Matrix</h3>
+            <span class="matrix-meta mono" id="matrix-meta">30yr · 6.500%</span>
+          </div>
+          <div class="table-scroll">
+            <table class="matrix-table">
+              <thead>
+                <tr>
+                  <th>Price</th>
+                  <th>5% Down</th>
+                  <th>10% Down</th>
+                  <th>20% Down</th>
+                </tr>
+              </thead>
+              <tbody id="matrix-tbody"></tbody>
+            </table>
+          </div>
+        </div>
 
-    </div><!-- /.top-grid -->
+        <!-- Card 4: Amortization Snapshot -->
+        <div class="card">
+          <div class="amort-header">
+            <h3 class="card-title">Amortization Snapshot</h3>
+            <span class="amort-meta mono" id="amort-meta">—</span>
+          </div>
+          <div class="amort-legend">
+            <span><span class="legend-dot ld-green"></span>Principal</span>
+            <span><span class="legend-dot ld-red"></span>Interest</span>
+          </div>
+          <div id="amort-bars"></div>
+        </div>
 
-    <!-- ── Chart ── -->
-    <section class="card chart-section" id="chart-section" hidden>
-      <div class="chart-header">
-        <h2>Principal vs. Interest Over Time</h2>
-        <p class="chart-sub">Annual payment breakdown — note how the principal share grows each year</p>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="amort-chart"></canvas>
-        <div class="chart-tooltip" id="chart-tooltip"></div>
-      </div>
-      <div class="chart-legend">
-        <span><span class="dot dot-blue"></span>Principal</span>
-        <span><span class="dot dot-orange"></span>Interest</span>
-      </div>
-    </section>
-
-    <!-- ── Amortization Table ── -->
-    <section class="card table-section" id="table-section" hidden>
-      <h2>Amortization Schedule</h2>
-      <p class="chart-sub">Yearly summary of principal, interest, and remaining balance</p>
-      <div class="table-scroll">
-        <table class="amort-table">
-          <thead>
-            <tr>
-              <th>Year</th>
-              <th>Principal Paid</th>
-              <th>Interest Paid</th>
-              <th>Total Paid</th>
-              <th>Remaining Balance</th>
-            </tr>
-          </thead>
-          <tbody id="amort-tbody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <footer>
-      <p>Estimates only — not financial advice. Consult a licensed mortgage professional.</p>
-    </footer>
-
+      </main>
+    </div><!-- /.dashboard -->
   </div><!-- /.container -->
 
   <script src="js/calculator.js"></script>

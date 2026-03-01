@@ -1,52 +1,39 @@
 'use strict';
 
+// ── Constants ─────────────────────────────────────────────
+const PRICES       = [350000, 400000, 450000, 500000, 550000, 600000, 650000, 700000, 800000];
+const DOWN_PCTS    = [0.05, 0.10, 0.20];
+const AMORT_YEARS  = [1, 2, 3, 5, 7, 10, 15, 20, 25, 30];
+const CLOSING_COST = 8500;
+const PMI_RATE     = 0.005; // 0.5% per year
+
+let currentTerm = 30;
+
 // ── DOM refs ──────────────────────────────────────────────
-const calculateBtn = document.getElementById('calculate-btn');
-const resultsEl    = document.getElementById('results');
-const chartSection = document.getElementById('chart-section');
-const tableSection = document.getElementById('table-section');
-const noteEl       = document.getElementById('affordability-note');
-const canvas       = document.getElementById('amort-chart');
-const tooltipEl    = document.getElementById('chart-tooltip');
-const tbody        = document.getElementById('amort-tbody');
-
-const fields = {
-  annualIncome:  document.getElementById('annual-income'),
-  monthlyDebts:  document.getElementById('monthly-debts'),
-  downPayment:   document.getElementById('down-payment'),
-  interestRate:  document.getElementById('interest-rate'),
-  loanTerm:      document.getElementById('loan-term'),
-  propertyTax:   document.getElementById('property-tax'),
-  homeInsurance: document.getElementById('home-insurance'),
-};
-
-const out = {
-  maxHomePrice:   document.getElementById('max-home-price'),
-  maxLoan:        document.getElementById('max-loan'),
-  monthlyPayment: document.getElementById('monthly-payment'),
-  totalInterest:  document.getElementById('total-interest'),
-  totalCost:      document.getElementById('total-cost'),
-  piPayment:      document.getElementById('pi-payment'),
-  dtiRatio:       document.getElementById('dti-ratio'),
-  dtiPctLabel:    document.getElementById('dti-pct-label'),
-  dtiDebts:       document.getElementById('dti-debts-segment'),
-  dtiHousing:     document.getElementById('dti-housing-segment'),
+const els = {
+  annualIncome:     document.getElementById('annual-income'),
+  taxRate:          document.getElementById('tax-rate'),
+  retirementSavings:document.getElementById('retirement-savings'),
+  livingExpenses:   document.getElementById('living-expenses'),
+  monthlyDebts:     document.getElementById('monthly-debts'),
+  cashToClose:      document.getElementById('cash-to-close'),
+  interestRate:     document.getElementById('interest-rate'),
+  propertyTax:      document.getElementById('property-tax'),
+  insuranceRate:    document.getElementById('insurance-rate'),
+  hoaFee:           document.getElementById('hoa-fee'),
+  comparisonPrice:  document.getElementById('comparison-price'),
 };
 
 // ── Formatters ────────────────────────────────────────────
-const fmt = n =>
-  n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const fmt = n => '$' + Math.round(Math.abs(n)).toLocaleString('en-US');
 
-function fmtShort(n) {
-  if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(1) + 'M';
-  if (n >= 1_000)     return '$' + Math.round(n / 1_000) + 'K';
-  return '$' + Math.round(n);
+function fmtSurplus(n) {
+  return (n >= 0 ? '+' : '−') + fmt(n) + '/mo';
 }
 
-// ── Math helpers ──────────────────────────────────────────
-
-/** Monthly principal + interest payment for a fixed-rate mortgage. */
-function calcMonthlyPI(principal, annualRate, termYears) {
+// ── Math ──────────────────────────────────────────────────
+function monthlyPI(principal, annualRate, termYears) {
+  if (principal <= 0) return 0;
   const r = annualRate / 100 / 12;
   const n = termYears * 12;
   if (r === 0) return principal / n;
@@ -54,292 +41,226 @@ function calcMonthlyPI(principal, annualRate, termYears) {
 }
 
 /**
- * Binary-search for the largest loan whose monthly P&I ≤ maxMonthly.
- * Converges to <$0.01 in 60 iterations.
+ * Full monthly PITI breakdown for a given price + down payment.
+ * @returns {{ piti, pi, pmi, tax, ins, loan }}
  */
-function maxAffordableLoan(maxMonthly, annualRate, termYears) {
-  let lo = 0, hi = 10_000_000;
-  for (let i = 0; i < 60; i++) {
-    const mid = (lo + hi) / 2;
-    calcMonthlyPI(mid, annualRate, termYears) <= maxMonthly ? (lo = mid) : (hi = mid);
-  }
-  return lo;
+function pitiBreakdown(price, downPct, rate, term, taxPct, insPct, hoa) {
+  const loan = price * (1 - downPct);
+  const pi   = monthlyPI(loan, rate, term);
+  const pmi  = downPct < 0.20 ? (loan * PMI_RATE) / 12 : 0;
+  const tax  = (price * taxPct / 100) / 12;
+  const ins  = (price * insPct / 100) / 12;
+  return { piti: pi + pmi + tax + ins + hoa, pi, pmi, tax, ins, loan };
 }
 
 /**
- * Build a year-by-year amortization schedule.
- * Returns array of { year, principal, interest, balance }.
+ * Calculate a specific year's principal and interest paid.
+ * Returns null if year > term (loan already paid off).
  */
-function buildAmortSchedule(principal, annualRate, termYears) {
-  const r         = annualRate / 100 / 12;
-  const monthlyPI = calcMonthlyPI(principal, annualRate, termYears);
-  let   balance   = principal;
-  const rows      = [];
+function yearAmort(loan, annualRate, termYears, targetYear) {
+  if (targetYear > termYears || loan <= 0) return null;
+  const r   = annualRate / 100 / 12;
+  const mpi = monthlyPI(loan, annualRate, termYears);
+  let balance = loan;
 
-  for (let yr = 1; yr <= termYears; yr++) {
-    let yrPrincipal = 0, yrInterest = 0;
-    for (let m = 0; m < 12; m++) {
-      const intPmt = balance * r;
-      const priPmt = Math.min(monthlyPI - intPmt, balance);
-      yrInterest  += intPmt;
-      yrPrincipal += priPmt;
-      balance      = Math.max(0, balance - priPmt);
-    }
-    rows.push({ year: yr, principal: yrPrincipal, interest: yrInterest, balance });
-  }
-  return rows;
-}
-
-/** Round maxVal up to a clean number for chart y-axis. */
-function niceMax(maxVal, steps = 5) {
-  const step = maxVal / steps;
-  const mag  = Math.pow(10, Math.floor(Math.log10(step)));
-  const norm = step / mag;
-  const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
-  return Math.ceil(maxVal / (nice * mag)) * (nice * mag);
-}
-
-// ── Chart ─────────────────────────────────────────────────
-let lastSchedule = null;
-let hitAreas     = [];
-
-function drawChart(schedule) {
-  const dpr = window.devicePixelRatio || 1;
-  const W   = canvas.offsetWidth;
-  const H   = canvas.offsetHeight;
-
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, W, H);
-
-  const PAD   = { top: 20, right: 16, bottom: 44, left: 70 };
-  const plotW = W - PAD.left - PAD.right;
-  const plotH = H - PAD.top  - PAD.bottom;
-  const n     = schedule.length;
-
-  const rawMax = Math.max(...schedule.map(d => d.principal + d.interest));
-  const yMax   = niceMax(rawMax);
-  const yStep  = yMax / 5;
-
-  ctx.font = '11px -apple-system, system-ui, sans-serif';
-
-  // Horizontal grid lines + Y-axis labels
-  for (let v = 0; v <= yMax; v += yStep) {
-    const y = PAD.top + plotH - (v / yMax) * plotH;
-
-    ctx.strokeStyle = '#f1f5f9';
-    ctx.lineWidth   = 1;
-    ctx.beginPath();
-    ctx.moveTo(PAD.left, y);
-    ctx.lineTo(PAD.left + plotW, y);
-    ctx.stroke();
-
-    ctx.fillStyle    = '#94a3b8';
-    ctx.textAlign    = 'right';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(fmtShort(v), PAD.left - 6, y);
+  // Advance to the start of the target year
+  for (let m = 0; m < (targetYear - 1) * 12; m++) {
+    const intPmt = balance * r;
+    balance -= (mpi - intPmt);
+    if (balance <= 0) return null;
   }
 
-  // Stacked bars
-  hitAreas = [];
-  const slotW  = plotW / n;
-  const barW   = Math.max(slotW * 0.72, 3);
-  const barOff = (slotW - barW) / 2;
-  const yBase  = PAD.top + plotH;
-
-  schedule.forEach((d, i) => {
-    const x    = PAD.left + i * slotW + barOff;
-    const priH = (d.principal / yMax) * plotH;
-    const intH = (d.interest  / yMax) * plotH;
-
-    // Interest segment (top, orange)
-    ctx.fillStyle = '#f97316';
-    ctx.fillRect(x, yBase - priH - intH, barW, intH);
-
-    // Principal segment (bottom, blue)
-    ctx.fillStyle = '#3b82f6';
-    ctx.fillRect(x, yBase - priH, barW, priH);
-
-    hitAreas.push({ x, w: barW, data: d });
-  });
-
-  // X-axis labels
-  const every = n <= 15 ? 1 : 5;
-  ctx.fillStyle    = '#94a3b8';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'top';
-  schedule.forEach((d, i) => {
-    if (d.year === 1 || d.year % every === 0) {
-      ctx.fillText(`Yr ${d.year}`, PAD.left + i * slotW + slotW / 2, yBase + 8);
-    }
-  });
-
-  // Axis lines
-  ctx.strokeStyle = '#e2e8f0';
-  ctx.lineWidth   = 1;
-  ctx.beginPath();
-  ctx.moveTo(PAD.left, PAD.top);
-  ctx.lineTo(PAD.left, yBase);
-  ctx.lineTo(PAD.left + plotW, yBase);
-  ctx.stroke();
+  let yrPrincipal = 0, yrInterest = 0;
+  for (let m = 0; m < 12; m++) {
+    if (balance <= 0) break;
+    const intPmt = balance * r;
+    const priPmt = Math.min(mpi - intPmt, balance);
+    yrInterest  += intPmt;
+    yrPrincipal += priPmt;
+    balance      = Math.max(0, balance - priPmt);
+  }
+  return { principal: yrPrincipal, interest: yrInterest };
 }
 
-// ── Table ─────────────────────────────────────────────────
-function renderTable(schedule) {
+// ── Read inputs ───────────────────────────────────────────
+function getVals() {
+  return {
+    annualIncome:      parseFloat(els.annualIncome.value)      || 0,
+    taxRate:           parseFloat(els.taxRate.value)           || 0,
+    retirementSavings: parseFloat(els.retirementSavings.value) || 0,
+    livingExpenses:    parseFloat(els.livingExpenses.value)    || 0,
+    monthlyDebts:      parseFloat(els.monthlyDebts.value)      || 0,
+    cashToClose:       parseFloat(els.cashToClose.value)       || 0,
+    interestRate:      parseFloat(els.interestRate.value)      || 0,
+    propertyTax:       parseFloat(els.propertyTax.value)       || 0,
+    insuranceRate:     parseFloat(els.insuranceRate.value)     || 0,
+    hoaFee:            parseFloat(els.hoaFee.value)            || 0,
+    comparisonPrice:   parseFloat(els.comparisonPrice.value)   || 550000,
+    term:              currentTerm,
+  };
+}
+
+// ── Compute cash flow ─────────────────────────────────────
+function cashFlow(v) {
+  const gross      = v.annualIncome / 12;
+  const taxes      = gross * v.taxRate / 100;
+  const retirement = v.retirementSavings / 12;
+  const available  = gross - taxes - retirement - v.livingExpenses - v.monthlyDebts;
+  return { gross, taxes, retirement, available };
+}
+
+// ── Render: KPI bar ───────────────────────────────────────
+function renderKPIs(cf) {
+  document.getElementById('kpi-gross').textContent      = fmt(cf.gross);
+  document.getElementById('kpi-retirement').textContent = fmt(cf.retirement);
+  document.getElementById('kpi-available').textContent  = fmt(cf.available);
+  document.getElementById('kpi-dti-ceiling').textContent= fmt(cf.gross * 0.28);
+}
+
+// ── Render: Waterfall ─────────────────────────────────────
+function renderWaterfall(v, cf) {
+  document.getElementById('wf-gross').textContent     = fmt(cf.gross);
+  document.getElementById('wf-taxes').textContent     = '−' + fmt(cf.taxes);
+  document.getElementById('wf-retirement').textContent= '−' + fmt(cf.retirement);
+  document.getElementById('wf-living').textContent    = '−' + fmt(v.livingExpenses);
+  document.getElementById('wf-debts').textContent     = '−' + fmt(v.monthlyDebts);
+  document.getElementById('wf-available').textContent = fmt(cf.available);
+}
+
+// ── Render: Comparison card ───────────────────────────────
+function renderComparison(v, cf) {
+  [30, 15].forEach(term => {
+    const b   = pitiBreakdown(v.comparisonPrice, 0.10, v.interestRate, term, v.propertyTax, v.insuranceRate, v.hoaFee);
+    const totalPI       = b.pi * term * 12;
+    const totalInterest = totalPI - b.loan;
+    const surplus       = cf.available - b.piti;
+    const pfx           = term === 30 ? 'c30' : 'c15';
+
+    document.getElementById(`${pfx}-piti`).textContent     = fmt(b.piti);
+    document.getElementById(`${pfx}-pi`).textContent       = fmt(b.pi);
+    document.getElementById(`${pfx}-total`).textContent    = fmt(totalPI);
+    document.getElementById(`${pfx}-interest`).textContent = fmt(totalInterest);
+
+    const surplusEl = document.getElementById(`${pfx}-surplus`);
+    surplusEl.textContent = fmtSurplus(surplus);
+    surplusEl.className   = `comp-surplus badge ${surplus >= 0 ? 'badge-green' : 'badge-red'}`;
+  });
+}
+
+// ── Render: Affordability matrix ──────────────────────────
+function renderMatrix(v, cf) {
+  document.getElementById('matrix-meta').textContent =
+    `${v.term}yr · ${v.interestRate.toFixed(3)}%`;
+
+  const tbody = document.getElementById('matrix-tbody');
   tbody.innerHTML = '';
-  schedule.forEach(d => {
+
+  PRICES.forEach(price => {
     const tr = document.createElement('tr');
-    tr.innerHTML =
-      `<td>${d.year}</td>` +
-      `<td>${fmt(d.principal)}</td>` +
-      `<td class="col-interest">${fmt(d.interest)}</td>` +
-      `<td>${fmt(d.principal + d.interest)}</td>` +
-      `<td class="col-balance">${fmt(d.balance)}</td>`;
+    const label = price >= 1_000_000
+      ? '$' + (price / 1_000_000).toFixed(1) + 'M'
+      : '$' + (price / 1000) + 'k';
+    tr.innerHTML = `<td class="price-cell">${label}</td>`;
+
+    DOWN_PCTS.forEach(downPct => {
+      const b         = pitiBreakdown(price, downPct, v.interestRate, v.term, v.propertyTax, v.insuranceRate, v.hoaFee);
+      const surplus   = cf.available - b.piti;
+      const dti       = cf.gross > 0 ? (b.piti / cf.gross) * 100 : 0;
+      const cashNeeded= price * downPct + CLOSING_COST;
+      const cashWarn  = cashNeeded > v.cashToClose;
+
+      const surplusCls = surplus >= 0 ? 'badge-green' : 'badge-red';
+      const surplusStr = (surplus >= 0 ? '+' : '−') + '$' +
+        Math.round(Math.abs(surplus)).toLocaleString('en-US');
+
+      const dtiCls = dti <= 28 ? 'badge-green' : dti <= 36 ? 'badge-amber' : 'badge-red';
+
+      tr.innerHTML +=
+        `<td>` +
+          `<div class="cell-piti">${fmt(b.piti)}</div>` +
+          `<div class="cell-badges">` +
+            `<span class="badge ${surplusCls}">${surplusStr}</span>` +
+            `<span class="badge ${dtiCls}">${dti.toFixed(1)}%</span>` +
+            (cashWarn ? `<span class="badge badge-amber">⚠ cash</span>` : '') +
+          `</div>` +
+        `</td>`;
+    });
+
     tbody.appendChild(tr);
   });
 }
 
-// ── Core calculation ──────────────────────────────────────
-function calculate() {
-  const annualIncome = parseFloat(fields.annualIncome.value)  || 0;
-  const monthlyDebts = parseFloat(fields.monthlyDebts.value)  || 0;
-  const downPayment  = parseFloat(fields.downPayment.value)   || 0;
-  const interestRate = parseFloat(fields.interestRate.value)  || 0;
-  const loanTerm     = parseInt(fields.loanTerm.value, 10)    || 30;
-  const propTaxRate  = parseFloat(fields.propertyTax.value)   || 0;
-  const annualIns    = parseFloat(fields.homeInsurance.value) || 0;
+// ── Render: Amortization snapshot ────────────────────────
+function renderAmortization(v) {
+  const price   = v.comparisonPrice;
+  const downPct = 0.10;
+  const loan    = price * (1 - downPct);
+  const years   = AMORT_YEARS.filter(y => y <= v.term);
 
-  if (annualIncome <= 0 || interestRate <= 0) {
-    alert('Please enter your annual income and interest rate.');
-    return;
-  }
+  document.getElementById('amort-meta').textContent =
+    `${fmt(price)} · 10% down · ${v.term}yr · ${v.interestRate.toFixed(3)}%`;
 
-  const monthlyIncome = annualIncome / 12;
+  const container = document.getElementById('amort-bars');
+  container.innerHTML = '';
 
-  // Standard lending limits: 28% front-end DTI, 43% total DTI
-  const maxHousing = Math.min(
-    monthlyIncome * 0.28,
-    monthlyIncome * 0.43 - monthlyDebts
-  );
+  // Pre-compute breakdowns to find scale max
+  const breakdowns = years.map(y => yearAmort(loan, v.interestRate, v.term, y));
+  const maxTotal   = Math.max(...breakdowns.map(b => b ? b.principal + b.interest : 0), 1);
 
-  if (maxHousing <= 0) {
-    showNote('bad',
-      'Your existing debts exceed standard lending limits. ' +
-      'Focus on paying them down before applying for a mortgage.');
-    resultsEl.hidden = false;
-    clearStats();
-    return;
-  }
+  years.forEach((year, i) => {
+    const bd = breakdowns[i];
+    if (!bd) return;
 
-  const monthlyIns = annualIns / 12;
+    // Bar width proportional to this year's payment vs max (all years nearly equal for fixed-rate,
+    // but we scale relative to annual payment so bars fill available width consistently)
+    const priPct = (bd.principal / (bd.principal + bd.interest)) * 100;
+    const intPct = 100 - priPct;
 
-  // Iteratively refine the loan amount: property tax scales with home price
-  let loan = maxAffordableLoan(maxHousing - monthlyIns, interestRate, loanTerm);
-  for (let i = 0; i < 10; i++) {
-    const mtx = propTaxRate / 100 * (loan + downPayment) / 12;
-    loan = maxAffordableLoan(maxHousing - mtx - monthlyIns, interestRate, loanTerm);
-  }
-
-  const homePrice     = loan + downPayment;
-  const monthlyTax    = propTaxRate / 100 * homePrice / 12;
-  const piPayment     = calcMonthlyPI(loan, interestRate, loanTerm);
-  const totalMonthly  = piPayment + monthlyTax + monthlyIns;
-  const totalInterest = piPayment * loanTerm * 12 - loan;
-  const totalCost     = loan + totalInterest;
-  const totalDTI      = (totalMonthly + monthlyDebts) / monthlyIncome;
-  const frontDTI      = totalMonthly / monthlyIncome;
-
-  // Populate stat cards
-  out.maxHomePrice.textContent   = fmt(homePrice);
-  out.maxLoan.textContent        = fmt(loan);
-  out.monthlyPayment.textContent = fmt(totalMonthly);
-  out.totalInterest.textContent  = fmt(totalInterest);
-  out.totalCost.textContent      = fmt(totalCost);
-  out.piPayment.textContent      = fmt(piPayment);
-  out.dtiRatio.textContent       = (totalDTI * 100).toFixed(1) + '%';
-  out.dtiPctLabel.textContent    = (totalDTI * 100).toFixed(1) + '% of income';
-
-  // DTI bar (100 % = monthly income)
-  const debtsPct   = Math.min((monthlyDebts / monthlyIncome) * 100, 100);
-  const housingPct = Math.min((totalMonthly  / monthlyIncome) * 100, 100 - debtsPct);
-  out.dtiDebts.style.width   = debtsPct   + '%';
-  out.dtiHousing.style.width = housingPct + '%';
-
-  // Affordability verdict
-  if (totalDTI <= 0.36 && frontDTI <= 0.28) {
-    showNote('good',
-      `Great shape! Your total DTI is ${(totalDTI * 100).toFixed(1)}% — well within the ideal 36% threshold.`);
-  } else if (totalDTI <= 0.43) {
-    showNote('warning',
-      `Your DTI is ${(totalDTI * 100).toFixed(1)}%. You may still qualify, but consider a larger down payment or reducing existing debts to strengthen your application.`);
-  } else {
-    showNote('bad',
-      `Your DTI of ${(totalDTI * 100).toFixed(1)}% exceeds the typical 43% maximum. Reduce debts, increase income, or target a lower home price.`);
-  }
-
-  resultsEl.hidden = false;
-
-  // Chart & amortization table
-  lastSchedule = buildAmortSchedule(loan, interestRate, loanTerm);
-  chartSection.hidden = false;
-  tableSection.hidden = false;
-
-  requestAnimationFrame(() => drawChart(lastSchedule));
-  renderTable(lastSchedule);
+    const row = document.createElement('div');
+    row.className = 'amort-row';
+    row.innerHTML =
+      `<span class="amort-year">Yr ${year}</span>` +
+      `<div class="amort-bar">` +
+        `<div class="amort-seg amort-principal" style="width:${priPct.toFixed(1)}%"></div>` +
+        `<div class="amort-seg amort-interest"  style="width:${intPct.toFixed(1)}%"></div>` +
+      `</div>` +
+      `<div class="amort-vals">` +
+        `<span class="amort-p-val">$${Math.round(bd.principal).toLocaleString()}</span>` +
+        `<span class="amort-sep">·</span>` +
+        `<span class="amort-i-val">$${Math.round(bd.interest).toLocaleString()}</span>` +
+      `</div>`;
+    container.appendChild(row);
+  });
 }
 
-function clearStats() {
-  ['maxHomePrice','maxLoan','monthlyPayment','totalInterest','totalCost','piPayment','dtiRatio']
-    .forEach(k => { out[k].textContent = '—'; });
-  out.dtiDebts.style.width = out.dtiHousing.style.width = '0%';
-  chartSection.hidden = tableSection.hidden = true;
+// ── Master update ─────────────────────────────────────────
+function updateAll() {
+  const v  = getVals();
+  const cf = cashFlow(v);
+  renderKPIs(cf);
+  renderWaterfall(v, cf);
+  renderComparison(v, cf);
+  renderMatrix(v, cf);
+  renderAmortization(v);
 }
 
-function showNote(type, msg) {
-  noteEl.className   = `afford-note ${type}`;
-  noteEl.textContent = msg;
-}
-
-// ── Chart hover tooltip ───────────────────────────────────
-canvas.addEventListener('mousemove', e => {
-  if (!hitAreas.length) return;
-  const rect = canvas.getBoundingClientRect();
-  const mx   = e.clientX - rect.left;
-  const hit  = hitAreas.find(a => mx >= a.x && mx <= a.x + a.w);
-
-  if (hit) {
-    const d = hit.data;
-    tooltipEl.innerHTML =
-      `<strong>Year ${d.year}</strong><br>` +
-      `<span style="color:#93c5fd">▪ Principal:</span> ${fmt(d.principal)}<br>` +
-      `<span style="color:#fdba74">▪ Interest:</span>  ${fmt(d.interest)}<br>` +
-      `<span style="color:#94a3b8">▪ Balance:</span>   ${fmt(d.balance)}`;
-
-    // Flip to left side when near right edge
-    const tipX = mx > rect.width / 2 ? mx - 170 : mx + 14;
-    const tipY = Math.max(e.clientY - rect.top - 85, 4);
-    tooltipEl.style.cssText = `display:block;left:${tipX}px;top:${tipY}px`;
-  } else {
-    tooltipEl.style.display = 'none';
-  }
+// ── Term toggle ───────────────────────────────────────────
+document.getElementById('btn-30').addEventListener('click', () => {
+  currentTerm = 30;
+  document.getElementById('btn-30').classList.add('active');
+  document.getElementById('btn-15').classList.remove('active');
+  updateAll();
 });
 
-canvas.addEventListener('mouseleave', () => { tooltipEl.style.display = 'none'; });
-
-// ── Redraw chart on resize ────────────────────────────────
-let resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    if (!chartSection.hidden && lastSchedule) drawChart(lastSchedule);
-  }, 150);
+document.getElementById('btn-15').addEventListener('click', () => {
+  currentTerm = 15;
+  document.getElementById('btn-15').classList.add('active');
+  document.getElementById('btn-30').classList.remove('active');
+  updateAll();
 });
 
-// ── Event listeners ───────────────────────────────────────
-calculateBtn.addEventListener('click', calculate);
-Object.values(fields).forEach(el =>
-  el.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); })
-);
+// ── Live update on all inputs ─────────────────────────────
+Object.values(els).forEach(el => el.addEventListener('input', updateAll));
+
+// ── Boot ──────────────────────────────────────────────────
+updateAll();

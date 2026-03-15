@@ -3,246 +3,224 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mortgage Affordability Calculator</title>
+  <title>Home Assistant Monitor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <div class="container">
 
-    <header>
-      <h1>Mortgage Affordability Calculator</h1>
-      <p class="subtitle">Real numbers. No surprises.</p>
-    </header>
-
-    <!-- KPI Bar -->
-    <div class="kpi-bar">
-      <div class="kpi">
-        <span class="kpi-label">Gross Monthly</span>
-        <span class="kpi-value mono" id="kpi-gross">—</span>
-      </div>
-      <div class="kpi kpi-violet">
-        <span class="kpi-label">Monthly Retirement</span>
-        <span class="kpi-value mono" id="kpi-retirement">—</span>
-      </div>
-      <div class="kpi kpi-green">
-        <span class="kpi-label">Available for Housing</span>
-        <span class="kpi-value mono" id="kpi-available">—</span>
-      </div>
-      <div class="kpi kpi-amber">
-        <span class="kpi-label">28% DTI Ceiling</span>
-        <span class="kpi-value mono" id="kpi-dti-ceiling">—</span>
-      </div>
+  <!-- Top Navigation -->
+  <nav class="topbar">
+    <div class="topbar-left">
+      <span class="logo">&#9751; Home Monitor</span>
+      <span class="connection-status" id="connection-status">
+        <span class="status-dot online"></span> Connected
+      </span>
     </div>
+    <div class="topbar-right">
+      <span class="uptime mono" id="uptime">Uptime: 0d 0h 0m</span>
+      <span class="clock mono" id="clock">--:--:--</span>
+    </div>
+  </nav>
 
-    <!-- Dashboard -->
-    <div class="dashboard">
+  <div class="app">
 
-      <!-- Left Panel -->
-      <aside class="card left-panel">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <button class="nav-btn active" data-view="dashboard">
+        <span class="nav-icon">&#9632;</span> Dashboard
+      </button>
+      <button class="nav-btn" data-view="rooms">
+        <span class="nav-icon">&#8962;</span> Rooms
+      </button>
+      <button class="nav-btn" data-view="devices">
+        <span class="nav-icon">&#9881;</span> Devices
+      </button>
+      <button class="nav-btn" data-view="automations">
+        <span class="nav-icon">&#9889;</span> Automations
+      </button>
+      <button class="nav-btn" data-view="energy">
+        <span class="nav-icon">&#9889;</span> Energy
+      </button>
+      <button class="nav-btn" data-view="logs">
+        <span class="nav-icon">&#9776;</span> Activity Log
+      </button>
 
-        <section class="input-section">
-          <h2 class="section-divider">Income &amp; Savings</h2>
-          <div class="field">
-            <label>Annual Gross Income</label>
-            <div class="input-wrap prefix">
-              <span class="affix">$</span>
-              <input type="number" id="annual-income" value="310000" min="0" step="1000" />
-            </div>
-          </div>
-          <div class="field">
-            <label>Effective Tax Rate</label>
-            <div class="input-wrap suffix">
-              <input type="number" id="tax-rate" value="28" min="0" max="60" step="0.5" />
-              <span class="affix">%</span>
-            </div>
-          </div>
-          <div class="field">
-            <label>
-              Annual Retirement Savings
-              <span class="hint">401k + Match + IRA + Mega Backdoor</span>
-            </label>
-            <div class="input-wrap prefix">
-              <span class="affix">$</span>
-              <input type="number" id="retirement-savings" value="115000" min="0" step="1000" />
-            </div>
-          </div>
-        </section>
+      <div class="sidebar-footer">
+        <div class="ha-info">
+          <span class="ha-label">HA Version</span>
+          <span class="ha-value mono">2026.3.2</span>
+        </div>
+        <div class="ha-info">
+          <span class="ha-label">Entities</span>
+          <span class="ha-value mono" id="entity-count">0</span>
+        </div>
+      </div>
+    </aside>
 
-        <section class="input-section">
-          <h2 class="section-divider">Lifestyle</h2>
-          <div class="field">
-            <label>
-              Monthly Living Expenses
-              <span class="hint">Food, fun, utilities, cars</span>
-            </label>
-            <div class="input-wrap prefix">
-              <span class="affix">$</span>
-              <input type="number" id="living-expenses" value="6000" min="0" step="100" />
-            </div>
-          </div>
-          <div class="field">
-            <label>Monthly Non-Mortgage Debts</label>
-            <div class="input-wrap prefix">
-              <span class="affix">$</span>
-              <input type="number" id="monthly-debts" value="0" min="0" step="100" />
-            </div>
-          </div>
-        </section>
+    <!-- Main Content -->
+    <main class="content">
 
-        <section class="input-section">
-          <h2 class="section-divider">Assets &amp; Loan</h2>
-          <div class="field">
-            <label>Cash to Close</label>
-            <div class="input-wrap prefix">
-              <span class="affix">$</span>
-              <input type="number" id="cash-to-close" value="100000" min="0" step="5000" />
-            </div>
-          </div>
-          <div class="field">
-            <label>Interest Rate</label>
-            <div class="input-wrap suffix">
-              <input type="number" id="interest-rate" value="6.5" min="0" max="20" step="0.125" />
-              <span class="affix">%</span>
-            </div>
-          </div>
-          <div class="field">
-            <label>Property Tax Rate</label>
-            <div class="input-wrap suffix">
-              <input type="number" id="property-tax" value="0.87" min="0" max="5" step="0.01" />
-              <span class="affix">%</span>
-            </div>
-          </div>
-          <div class="field">
-            <label>Home Insurance Rate</label>
-            <div class="input-wrap suffix">
-              <input type="number" id="insurance-rate" value="0.4" min="0" max="3" step="0.01" />
-              <span class="affix">%</span>
-            </div>
-          </div>
-          <div class="field">
-            <label>HOA Monthly Fee <span class="hint">optional</span></label>
-            <div class="input-wrap prefix">
-              <span class="affix">$</span>
-              <input type="number" id="hoa-fee" value="0" min="0" step="25" />
-            </div>
-          </div>
-        </section>
+      <!-- ===== DASHBOARD VIEW ===== -->
+      <section class="view active" id="view-dashboard">
 
-        <section class="input-section">
-          <h2 class="section-divider">Loan Term</h2>
-          <div class="term-toggle">
-            <button class="term-btn active" data-term="30" id="btn-30">30yr</button>
-            <button class="term-btn" data-term="15" id="btn-15">15yr</button>
+        <!-- System Health Row -->
+        <div class="section-header">
+          <h2>System Health</h2>
+          <span class="badge badge-green" id="system-badge">All Systems Normal</span>
+        </div>
+        <div class="health-grid">
+          <div class="health-card">
+            <div class="health-label">CPU</div>
+            <div class="health-bar-wrap">
+              <div class="health-bar" id="cpu-bar" style="width:0%"></div>
+            </div>
+            <div class="health-value mono" id="cpu-val">0%</div>
           </div>
-        </section>
+          <div class="health-card">
+            <div class="health-label">Memory</div>
+            <div class="health-bar-wrap">
+              <div class="health-bar bar-violet" id="mem-bar" style="width:0%"></div>
+            </div>
+            <div class="health-value mono" id="mem-val">0%</div>
+          </div>
+          <div class="health-card">
+            <div class="health-label">Disk</div>
+            <div class="health-bar-wrap">
+              <div class="health-bar bar-amber" id="disk-bar" style="width:0%"></div>
+            </div>
+            <div class="health-value mono" id="disk-val">0%</div>
+          </div>
+          <div class="health-card">
+            <div class="health-label">Temperature</div>
+            <div class="health-bar-wrap">
+              <div class="health-bar bar-red" id="temp-bar" style="width:0%"></div>
+            </div>
+            <div class="health-value mono" id="temp-val">0°C</div>
+          </div>
+        </div>
 
-      </aside>
+        <!-- Weather + Quick Stats -->
+        <div class="quick-row">
+          <div class="card weather-card">
+            <div class="weather-top">
+              <span class="weather-icon" id="weather-icon">&#9788;</span>
+              <div>
+                <div class="weather-temp mono" id="weather-temp">--°F</div>
+                <div class="weather-desc" id="weather-desc">Loading...</div>
+              </div>
+            </div>
+            <div class="weather-details">
+              <div class="weather-detail">
+                <span class="wd-label">Humidity</span>
+                <span class="wd-value mono" id="weather-humidity">--%</span>
+              </div>
+              <div class="weather-detail">
+                <span class="wd-label">Wind</span>
+                <span class="wd-value mono" id="weather-wind">-- mph</span>
+              </div>
+              <div class="weather-detail">
+                <span class="wd-label">UV Index</span>
+                <span class="wd-value mono" id="weather-uv">--</span>
+              </div>
+              <div class="weather-detail">
+                <span class="wd-label">AQI</span>
+                <span class="wd-value mono" id="weather-aqi">--</span>
+              </div>
+            </div>
+          </div>
 
-      <!-- Right Panel -->
-      <main class="right-panel">
-
-        <!-- Card 1: Cash Flow Waterfall -->
-        <div class="card">
-          <h3 class="card-title">Cash Flow Waterfall</h3>
-          <div class="waterfall">
-            <div class="wf-row">
-              <span class="wf-label">Gross Monthly Income</span>
-              <span class="wf-value mono" id="wf-gross">—</span>
-            </div>
-            <div class="wf-row wf-red">
-              <span class="wf-label">− Taxes</span>
-              <span class="wf-value mono" id="wf-taxes">—</span>
-            </div>
-            <div class="wf-row wf-violet">
-              <span class="wf-label">− Retirement Savings</span>
-              <span class="wf-value mono" id="wf-retirement">—</span>
-            </div>
-            <div class="wf-row wf-amber">
-              <span class="wf-label">− Living Expenses</span>
-              <span class="wf-value mono" id="wf-living">—</span>
-            </div>
-            <div class="wf-row wf-red">
-              <span class="wf-label">− Monthly Debts</span>
-              <span class="wf-value mono" id="wf-debts">—</span>
-            </div>
-            <div class="wf-row wf-result">
-              <span class="wf-label">Available for Housing</span>
-              <span class="wf-value mono" id="wf-available">—</span>
+          <div class="card quick-stats-card">
+            <h3 class="card-title">Quick Stats</h3>
+            <div class="stat-grid">
+              <div class="stat-item">
+                <span class="stat-number mono" id="stat-lights-on">0</span>
+                <span class="stat-label">Lights On</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number mono" id="stat-doors-open">0</span>
+                <span class="stat-label">Doors Open</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number mono" id="stat-active-auto">0</span>
+                <span class="stat-label">Automations</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number mono" id="stat-alerts">0</span>
+                <span class="stat-label">Alerts</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Card 2: 15yr vs 30yr Comparison -->
-        <div class="card">
-          <div class="comparison-header">
-            <h3 class="card-title">15yr vs 30yr at</h3>
-            <div class="price-input-wrap">
-              <span class="affix mono violet">$</span>
-              <input type="number" id="comparison-price" value="550000" min="0" step="10000" class="price-input mono violet" />
-            </div>
-          </div>
-          <p class="comp-note">10% down · PMI where applicable</p>
-          <div class="comparison-grid">
-            <div class="comp-card comp-violet">
-              <div class="comp-term violet">30 Year</div>
-              <div class="comp-row"><span class="comp-label">Monthly PITI</span><span class="comp-value mono" id="c30-piti">—</span></div>
-              <div class="comp-row"><span class="comp-label">P&amp;I Only</span><span class="comp-value mono" id="c30-pi">—</span></div>
-              <div class="comp-row"><span class="comp-label">Total P&amp;I Paid</span><span class="comp-value mono" id="c30-total">—</span></div>
-              <div class="comp-row"><span class="comp-label">Total Interest</span><span class="comp-value mono red" id="c30-interest">—</span></div>
-              <div class="comp-surplus badge" id="c30-surplus">—</div>
-            </div>
-            <div class="comp-card comp-green">
-              <div class="comp-term green">15 Year</div>
-              <div class="comp-row"><span class="comp-label">Monthly PITI</span><span class="comp-value mono" id="c15-piti">—</span></div>
-              <div class="comp-row"><span class="comp-label">P&amp;I Only</span><span class="comp-value mono" id="c15-pi">—</span></div>
-              <div class="comp-row"><span class="comp-label">Total P&amp;I Paid</span><span class="comp-value mono" id="c15-total">—</span></div>
-              <div class="comp-row"><span class="comp-label">Total Interest</span><span class="comp-value mono red" id="c15-interest">—</span></div>
-              <div class="comp-surplus badge" id="c15-surplus">—</div>
-            </div>
+        <!-- Favorite Devices -->
+        <div class="section-header">
+          <h2>Favorite Devices</h2>
+        </div>
+        <div class="device-grid" id="fav-devices"></div>
+
+        <!-- Recent Activity -->
+        <div class="section-header">
+          <h2>Recent Activity</h2>
+        </div>
+        <div class="activity-list" id="dashboard-activity"></div>
+
+      </section>
+
+      <!-- ===== ROOMS VIEW ===== -->
+      <section class="view" id="view-rooms">
+        <div class="section-header"><h2>Rooms</h2></div>
+        <div class="rooms-grid" id="rooms-grid"></div>
+      </section>
+
+      <!-- ===== DEVICES VIEW ===== -->
+      <section class="view" id="view-devices">
+        <div class="section-header">
+          <h2>All Devices</h2>
+          <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="light">Lights</button>
+            <button class="filter-btn" data-filter="thermostat">Climate</button>
+            <button class="filter-btn" data-filter="lock">Locks</button>
+            <button class="filter-btn" data-filter="sensor">Sensors</button>
+            <button class="filter-btn" data-filter="camera">Cameras</button>
+            <button class="filter-btn" data-filter="switch">Switches</button>
           </div>
         </div>
+        <div class="device-grid" id="all-devices"></div>
+      </section>
 
-        <!-- Card 3: Affordability Matrix -->
+      <!-- ===== AUTOMATIONS VIEW ===== -->
+      <section class="view" id="view-automations">
+        <div class="section-header"><h2>Automations</h2></div>
+        <div class="auto-list" id="auto-list"></div>
+      </section>
+
+      <!-- ===== ENERGY VIEW ===== -->
+      <section class="view" id="view-energy">
+        <div class="section-header"><h2>Energy Monitor</h2></div>
+        <div class="energy-summary" id="energy-summary"></div>
         <div class="card">
-          <div class="matrix-header">
-            <h3 class="card-title">Affordability Matrix</h3>
-            <span class="matrix-meta mono" id="matrix-meta">30yr · 6.500%</span>
-          </div>
-          <div class="table-scroll">
-            <table class="matrix-table">
-              <thead>
-                <tr>
-                  <th>Price</th>
-                  <th>5% Down</th>
-                  <th>10% Down</th>
-                  <th>20% Down</th>
-                </tr>
-              </thead>
-              <tbody id="matrix-tbody"></tbody>
-            </table>
-          </div>
+          <h3 class="card-title">24h Power Usage (Watts)</h3>
+          <div class="energy-chart" id="energy-chart"></div>
         </div>
-
-        <!-- Card 4: Amortization Snapshot -->
         <div class="card">
-          <div class="amort-header">
-            <h3 class="card-title">Amortization Snapshot</h3>
-            <span class="amort-meta mono" id="amort-meta">—</span>
-          </div>
-          <div class="amort-legend">
-            <span><span class="legend-dot ld-green"></span>Principal</span>
-            <span><span class="legend-dot ld-red"></span>Interest</span>
-          </div>
-          <div id="amort-bars"></div>
+          <h3 class="card-title">Per-Device Breakdown</h3>
+          <div class="energy-breakdown" id="energy-breakdown"></div>
         </div>
+      </section>
 
-      </main>
-    </div><!-- /.dashboard -->
-  </div><!-- /.container -->
+      <!-- ===== LOGS VIEW ===== -->
+      <section class="view" id="view-logs">
+        <div class="section-header"><h2>Activity Log</h2></div>
+        <div class="activity-list full-log" id="full-log"></div>
+      </section>
 
-  <script src="js/calculator.js"></script>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
 </body>
 </html>

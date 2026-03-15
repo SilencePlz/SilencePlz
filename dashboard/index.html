@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HA Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ── Top bar ─────────────────────────────────────────────────── -->
+    <header class="topbar">
+      <div class="topbar-icon">🏠</div>
+      <h1>HA Monitor</h1>
+      <div class="topbar-meta">
+        <div class="connection-badge">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">Connecting…</span>
+        </div>
+        <button class="refresh-btn" id="refresh-btn">↺ Refresh</button>
+        <button class="refresh-btn" id="settings-btn">⚙ Settings</button>
+      </div>
+    </header>
+
+    <div class="main-layout">
+
+      <!-- ── Sidebar ───────────────────────────────────────────────── -->
+      <nav class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Domains</div>
+          <button class="domain-btn active" id="domain-all" data-domain="all">
+            <span class="domain-icon">🔎</span>
+            <span>All Entities</span>
+            <span class="domain-count" id="count-all"></span>
+          </button>
+          <div id="domain-list"></div>
+        </div>
+        <hr class="sidebar-divider" />
+        <div class="sidebar-section">
+          <div class="sidebar-label">About</div>
+          <div style="padding:4px 8px;font-size:0.75rem;color:var(--text-muted);line-height:1.6">
+            Powered by AppDaemon.<br>
+            Auto-refreshes every 5 s.
+          </div>
+        </div>
+      </nav>
+
+      <!-- ── Main content ──────────────────────────────────────────── -->
+      <main class="content">
+
+        <!-- KPI row -->
+        <div class="kpi-row">
+          <div class="kpi-card kpi-blue" id="kpi-total">
+            <span class="kpi-card-label">Total Entities</span>
+            <span class="kpi-card-value">—</span>
+            <span class="kpi-card-sub">tracked</span>
+          </div>
+          <div class="kpi-card kpi-green" id="kpi-online">
+            <span class="kpi-card-label">Online</span>
+            <span class="kpi-card-value">—</span>
+            <span class="kpi-card-sub"></span>
+          </div>
+          <div class="kpi-card" id="kpi-offline">
+            <span class="kpi-card-label">Offline</span>
+            <span class="kpi-card-value">—</span>
+            <span class="kpi-card-sub">unavailable / unknown</span>
+          </div>
+          <div class="kpi-card" id="kpi-alerts">
+            <span class="kpi-card-label">Active Alerts</span>
+            <span class="kpi-card-value">—</span>
+            <span class="kpi-card-sub"></span>
+          </div>
+        </div>
+
+        <!-- Alerts panel -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              Active Alerts
+              <span id="alerts-badge" style="
+                font-size:0.72rem;font-family:var(--font-mono);
+                background:var(--red);color:#fff;border-radius:10px;
+                padding:1px 7px;margin-left:6px;vertical-align:middle;
+              "></span>
+            </span>
+          </div>
+          <div class="alerts-list" id="alerts-container">
+            <div class="empty-state">Loading…</div>
+          </div>
+        </div>
+
+        <!-- Entity table -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Entities</span>
+            <span class="card-meta" id="entity-count"></span>
+          </div>
+          <div class="toolbar">
+            <div class="search-wrap">
+              <!-- search icon -->
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <input
+                type="text"
+                id="entity-search"
+                class="search-input"
+                placeholder="Search by name or entity ID…"
+              />
+            </div>
+            <span class="row-count" id="entity-count-row"></span>
+          </div>
+          <div class="table-scroll">
+            <table class="entity-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Domain</th>
+                  <th>State</th>
+                  <th>Battery</th>
+                  <th>Changed</th>
+                </tr>
+              </thead>
+              <tbody id="entity-tbody">
+                <tr><td colspan="5" class="empty-state">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Event history -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Events</span>
+            <span class="card-meta">last 50</span>
+          </div>
+          <div class="event-list" id="events-container">
+            <div class="empty-state">Loading…</div>
+          </div>
+        </div>
+
+      </main>
+    </div><!-- /.main-layout -->
+  </div><!-- /.app-shell -->
+
+  <script src="js/app.js"></script>
+</body>
+</html>

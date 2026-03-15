@@ -1,0 +1,33 @@
+---
+# AppDaemon App Configuration for HA Monitor
+# Place this file (or include its contents) in your AppDaemon apps/ directory.
+
+ha_monitor:
+  module: ha_monitor
+  class: HAMonitor
+
+  # Domains whose entities are tracked
+  domains_to_track:
+    - binary_sensor
+    - climate
+    - cover
+    - device_tracker
+    - fan
+    - light
+    - lock
+    - media_player
+    - sensor
+    - switch
+
+  # Percent at or below which a battery alert is raised
+  battery_threshold: 20
+
+  # How often (seconds) to run the full health sweep
+  check_interval: 60
+
+  # Max state-change events kept in memory
+  max_events: 200
+
+  # Optional: Home Assistant notify service for critical alerts
+  # e.g. notify.mobile_app_my_phone or notify.telegram
+  # notification_target: notify.mobile_app_my_phone

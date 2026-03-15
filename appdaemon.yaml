@@ -1,0 +1,38 @@
+---
+# AppDaemon Main Configuration
+# https://appdaemon.readthedocs.io/en/latest/CONFIGURE.html
+
+appdaemon:
+  latitude: 0
+  longitude: 0
+  elevation: 0
+  time_zone: UTC
+  missing_app_warnings: 1
+  invalid_config_warnings: 1
+  plugins:
+    HASS:
+      type: hass
+      ha_url: !env_var HA_URL http://homeassistant.local:8123
+      token: !env_var HA_TOKEN YOUR_LONG_LIVED_ACCESS_TOKEN
+
+# Built-in HTTP server — serves the dashboard and REST API
+http:
+  url: http://0.0.0.0:5050
+  # Uncomment to password-protect the API:
+  # password: !env_var AD_PASSWORD
+
+# Logging
+logs:
+  main_log:
+    filename: /conf/logs/appdaemon.log
+    log_generations: 3
+    log_size: 1000000
+    format: "{asctime} {levelname} {appname}: {message}"
+  error_log:
+    filename: /conf/logs/appdaemon_error.log
+    log_generations: 3
+    log_size: 500000
+  access_log:
+    filename: /conf/logs/appdaemon_access.log
+    log_generations: 3
+    log_size: 500000
